@@ -27,8 +27,10 @@ let gameRunning = false;
 const game = () => {
   let winner = ""
   setInterval(() => {
-    io.emit("question")
-  }, 10000);
+    console.log("triggered game");
+
+    io.emit("question", "What is 1+1?")
+  }, 1000);
 
 }
 
@@ -59,15 +61,10 @@ io.on("connection", (socket) => {
     console.log(users);
 
     if (users.length > 1 && !gameRunning){
-      console.log("run");
-      console.log(socket);
-
-      socket.emit("server_message", "Game is starting soon..")
+      io.emit("server_message", "Game is starting soon..")
+      game();
     } else {
-      console.log("run2");
-      console.log(users.length);
-
-      socket.emit("server_message", `Need ${2 - users.length} more player(s) to start.`)
+      io.emit("server_message", `Need ${2 - users.length} more player(s) to start.`)
     }
   })
 })
