@@ -1,6 +1,7 @@
 import express from "express";
 import http from "http";
 import {Server} from "socket.io";
+import quiz from "./qna.js";
 import cors from "cors";
 
 const PORT = process.env.PORT
@@ -21,18 +22,59 @@ const io = new Server(server, {
 const connectSockets = new Set();
 
 let users = []
-
 let gameRunning = false;
+let newQuiz = {
+  "question": "apple",
+  "answer": "apple"
+};
+
 
 const game = () => {
-  let winner = ""
-  setInterval(() => {
-    console.log("triggered game");
 
-    io.emit("question", "What is 1+1?")
-  }, 1000);
+  const generateQuiz = () => {
+    return quiz[Math.floor(Math.random() * quiz.length)]
+  }
+  setInterval(() => {
+    // console.log("triggered game");
+    // if(newQuiz) io.emit("question", `Previous answer was ${newQuiz["answer"]}`)
+
+    // newQuiz = generateQuiz();
+
+    io.emit("question", newQuiz["question"])
+  }, 10000);
 
 }
+
+const addScore = (name) => {
+  const findIndex = users.findIndex( user => {
+    console.log(`username = ${name}`);
+
+    const keys = Object.keys(user)
+    console.log(keys);
+    const answer = keys.includes(name)
+    console.log(answer);
+    return answer
+  })
+
+  users[findIndex][name] += 1;
+  console.log(users[findIndex]);
+
+  io.emit("updated_score", users)
+
+}
+
+const checkAnswer = (data) => {
+  if(data.message === newQuiz["answer"]){
+    console.log("correct_answer");
+
+    return addScore(data.name)
+  }
+  console.log("incorrect_answer");
+
+}
+
+
+
 
 
 io.on("connection", (socket) => {
@@ -48,6 +90,7 @@ io.on("connection", (socket) => {
   })
 
   socket.on("send_message", (data) => {
+    checkAnswer(data)
     socket.broadcast.emit("incoming_messages", data)
   })
 

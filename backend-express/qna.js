@@ -1,4 +1,4 @@
-[
+const quiz = [
   {"question": "What is the capital of France?", "answer": "Paris"},
   {"question": "What is the largest planet in our solar system?", "answer": "Jupiter"},
   {"question": "Who wrote 'To Kill a Mockingbird'?", "answer": "Harper Lee"},
@@ -98,3 +98,5 @@
   {"question": "Who discovered the neutron?", "answer": "James Chadwick"},
   {"question": "What is the chemical symbol for magnesium?", "answer": "Mg"}
 ]
+
+export default quiz;
