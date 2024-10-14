@@ -5,3 +5,71 @@ body {
   align-items: center;
   height: 100vh;
 }
+
+.App{
+  display: flex;
+}
+.App div{
+  margin: 0px 30px;
+}
+
+.phone-div{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.phone-div > div:last-child{
+  font-weight: bold;
+  margin: 50px 0px;
+}
+
+.scoreboard{
+  background-color: lightgray;
+  align-self: start;
+  width: 150px;
+  padding: 0px 10px;
+  border-radius: 10px;
+}
+.scoreboard li{
+  padding: 10px 5px;
+  border-bottom: 1px solid rgb(170, 167, 167);
+  /* display: flex; */
+}
+
+.scoreboard li span{
+  display: inline-block;
+}
+
+.scoreboard ol{
+  backdrop-filter: blur(5px);
+
+}
+
+
+.scoreboard li span:nth-child(1) {
+  display: inline-block;
+  width: 70%;
+  overflow-x: hidden;
+}
+
+.scoreboard li span:nth-child(2) {
+  display: inline-block;
+  width: 30%;
+  text-align: right;
+}
+
+#root{
+  width: 100%;
+  height: 100%;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+ol{
+
+  padding-left: 20px;
+}

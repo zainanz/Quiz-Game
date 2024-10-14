@@ -23,53 +23,66 @@ const connectSockets = new Set();
 
 let users = []
 let gameRunning = false;
-let newQuiz = {
-  "question": "apple",
-  "answer": "apple"
-};
+let newQuiz;
+let timer;
+let win;
 
 
 const game = () => {
-
+  gameRunning = true;
   const generateQuiz = () => {
     return quiz[Math.floor(Math.random() * quiz.length)]
   }
-  setInterval(() => {
-    // console.log("triggered game");
-    // if(newQuiz) io.emit("question", `Previous answer was ${newQuiz["answer"]}`)
-
-    // newQuiz = generateQuiz();
+  timer = setInterval(() => {
+    console.log("triggered game");
+    console.log(newQuiz);
+    if(newQuiz) io.emit("question", `Previous answer was ${newQuiz["answer"]}`)
+    win = false;
+    newQuiz = generateQuiz();
 
     io.emit("question", newQuiz["question"])
   }, 10000);
 
 }
 
+const stopGame = () => {
+  gameRunning = false;
+  clearInterval(timer);
+  newQuiz = null;
+  win = null;
+  io.emit("question", "The game has stopped :C - Waiting for more players to join..")
+
+}
+
+
 const addScore = (name) => {
   const findIndex = users.findIndex( user => {
-    console.log(`username = ${name}`);
-
-    const keys = Object.keys(user)
-    console.log(keys);
-    const answer = keys.includes(name)
-    console.log(answer);
-    return answer
+   return user.username === name
   })
+  console.log(findIndex);
 
-  users[findIndex][name] += 1;
-  console.log(users[findIndex]);
-
+  users[findIndex].score += 1;
   io.emit("updated_score", users)
 
 }
 
 const checkAnswer = (data) => {
-  if(data.message === newQuiz["answer"]){
-    console.log("correct_answer");
+  try {
+    if (win) return
+    if(data.message.toLowerCase().replace(/\s/g, "") === newQuiz["answer"].toLowerCase().replace(/\s/g, "")){
+      win = true;
+      newQuiz = null;
+      clearInterval(timer);
+      io.emit("question", `${data.name} got it right! - Next question in 3s..`)
+      setTimeout(() => {
+        game()
+      }, 300);
+      return addScore(data.name)
+    }
+  } catch(er){
+    console.log(er);
 
-    return addScore(data.name)
   }
-  console.log("incorrect_answer");
 
 }
 
@@ -80,13 +93,19 @@ const checkAnswer = (data) => {
 io.on("connection", (socket) => {
   connectSockets.add(socket.id);
   console.log(`${socket.id} connected to the server. ${connectSockets.size} Active Sockets`);
+  console.log(users);
 
   socket.on("disconnect", () => {
     connectSockets.delete(socket.id)
-    console.log(`${socket.id} left the server.`)
-    users = users.filter( user => user.socket_id === socket.id);
-    console.log(users);
-
+    users = users.filter( user => {
+      if (user.socket_id === socket.id){
+        console.log(`${user.username} - Socket ID: ${socket.id} left the server.`)
+        return false;
+      }
+      return true;
+    });
+    io.emit("updated_score", users)
+    if(users.length < 2) stopGame()
   })
 
   socket.on("send_message", (data) => {
@@ -96,17 +115,19 @@ io.on("connection", (socket) => {
 
   socket.on("register", (data) => {
     const userInstance = {
-      [data]: 0,
+      username: data,
+      score: 0,
       socket_id: socket.id
     };
     users.push(userInstance)
-    console.log(userInstance);
     console.log(users);
+    io.emit("updated_score", users)
 
     if (users.length > 1 && !gameRunning){
       io.emit("server_message", "Game is starting soon..")
       game();
     } else {
+
       io.emit("server_message", `Need ${2 - users.length} more player(s) to start.`)
     }
   })

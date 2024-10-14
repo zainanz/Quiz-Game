@@ -1,5 +1,5 @@
 import "./quizbox.css"
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { IoIosSend } from "react-icons/io";
 import { RiSave2Fill } from "react-icons/ri";
 import {socket} from "../socket"
@@ -28,6 +28,10 @@ export default function QuizBox({messages, message, setMessage, setMessages}: Pr
     <span>${transform_message.name} 20-11-2024</span>
   </li>`
   }
+  useEffect(() => {
+    const parent = list.current?.parentElement;
+    parent?.scrollTo(0, parent.scrollHeight)
+  }, [messages])
 
   const sendMessage = (e: { preventDefault: () => void; }) => {
     console.log(socket);
@@ -39,8 +43,7 @@ export default function QuizBox({messages, message, setMessage, setMessages}: Pr
     }
     const elem = elementCreator(transform_message)
     list.current!.innerHTML += elem;
-    const parent = list.current?.parentElement;
-    parent?.scrollTo(0, parent.scrollHeight);
+;
     socket.emit("send_message", transform_message );
   }
 
@@ -48,7 +51,6 @@ export default function QuizBox({messages, message, setMessage, setMessages}: Pr
     console.log(socket);
 
     setUsername((prev) => ({...prev, username: prev.tempholder}))
-    console.log("Sending server message");
     socket.emit("register", usernameHolder.tempholder, (error: any) => {
       if (error) {
         console.error("Error during registration:", error);
