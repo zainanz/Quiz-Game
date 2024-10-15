@@ -29,6 +29,7 @@ let win;
 
 
 const game = () => {
+  io.emit("server_message", "Game running")
   gameRunning = true;
   const generateQuiz = () => {
     return quiz[Math.floor(Math.random() * quiz.length)]
@@ -93,12 +94,15 @@ const checkAnswer = (data) => {
 io.on("connection", (socket) => {
   connectSockets.add(socket.id);
   console.log(`${socket.id} connected to the server. ${connectSockets.size} Active Sockets`);
+  io.emit("updated_score", users)
+
   console.log(users);
 
   socket.on("disconnect", () => {
     connectSockets.delete(socket.id)
     users = users.filter( user => {
       if (user.socket_id === socket.id){
+        io.emit("server_logs", `${user.username} left the server.`)
         console.log(`${user.username} - Socket ID: ${socket.id} left the server.`)
         return false;
       }
@@ -121,14 +125,17 @@ io.on("connection", (socket) => {
     };
     users.push(userInstance)
     console.log(users);
+    io.emit("server_logs", `${userInstance.username} just joined the game.`);
     io.emit("updated_score", users)
-
-    if (users.length > 1 && !gameRunning){
-      io.emit("server_message", "Game is starting soon..")
-      game();
-    } else {
-
-      io.emit("server_message", `Need ${2 - users.length} more player(s) to start.`)
+    if (gameRunning){
+      io.emit("server_message", "Game is running")
+    }else {
+      if (users.length > 1){
+        io.emit("server_message", "Game is starting soon..")
+        game();
+      } else {
+        io.emit("server_message", `Need ${2 - users.length} more player(s) to start.`)
+      }
     }
   })
 })
